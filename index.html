@@ -15,65 +15,21 @@
         body { font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
         .font-dm-sans { font-family: 'DM Sans', sans-serif; }
         
-        /* --- CRITICAL PRINT FIXES --- */
+        /* --- PRINT FIXES (Retained) --- */
         @media print {
-            @page { 
-                size: A4; 
-                margin: 0; 
-            }
-            
-            html, body {
-                width: 210mm;
-                height: 297mm;
-                margin: 0 !important;
-                padding: 0 !important;
-                background-color: white;
-                overflow: hidden !important; /* Hides the scrollbar/extra pixels */
-            }
-
-            #root { 
-                margin: 0 !important; 
-                padding: 0 !important;
-                width: 100% !important;
-            }
-
+            @page { size: A4; margin: 0; }
+            html, body { width: 210mm; height: 297mm; margin: 0 !important; padding: 0 !important; background-color: white; overflow: hidden !important; }
+            #root { margin: 0 !important; padding: 0 !important; width: 100% !important; }
             .no-print { display: none !important; }
-
-            /* Reset the scaling container */
-            .print-container {
-                transform: none !important;
-                width: 100% !important;
-                height: 100% !important;
-                position: static !important;
-                margin: 0 !important;
-                overflow: hidden !important;
-                page-break-inside: avoid !important; /* Prevents splitting */
-            }
-
-            /* MOBILE FIX: 
-               We set height to 296.5mm (just under 297mm) to accommodate 
-               tiny invisible margins mobile browsers often enforce.
-            */
-            .a4-sheet {
-                width: 210mm !important;
-                height: 296.5mm !important; 
-                margin: 0 auto !important;
-                box-shadow: none !important;
-                border: none !important;
-                overflow: hidden !important;
-                page-break-after: avoid !important;
-                page-break-before: avoid !important;
-            }
-            
-            /* Hide the decorative dot in print to save space/confusion */
+            /* Force content to fit 1 page */
+            .print-container { transform: none !important; width: 100% !important; height: 100% !important; position: static !important; margin: 0 !important; overflow: hidden !important; page-break-inside: avoid !important; }
+            /* 296.5mm height prevents the "2nd page" bug on mobile printers */
+            .a4-sheet { width: 210mm !important; height: 296.5mm !important; margin: 0 auto !important; box-shadow: none !important; border: none !important; overflow: hidden !important; page-break-after: avoid !important; }
             .decorative-dot { display: none !important; }
         }
 
-        /* Clean up Date Input */
         input[type="date"]::-webkit-inner-spin-button,
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: grayscale(1); opacity: 0.5;
-        }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: grayscale(1); opacity: 0.5; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -99,11 +55,13 @@
             const [scale, setScale] = useState(1);
             const containerRef = useRef(null);
             
+            // Image Logic
             const isSmallMode = images.length > 6;
+            // Original sizes retained:
             const IMG_SIZE_CLASS = isSmallMode ? 'w-[130px] h-[130px]' : 'w-[200px] h-[200px]';
             const WRAPPER_WIDTH_CLASS = isSmallMode ? 'w-[130px]' : 'w-[200px]';
-            const GRID_CLASS = isSmallMode ? 'grid-cols-[repeat(auto-fit,130px)]' : 'grid-cols-[repeat(auto-fit,200px)]';
-
+            
+            // A4 Constants
             const A4_WIDTH_PX = 794;
             const A4_HEIGHT_PX = 1123;
 
@@ -192,7 +150,13 @@
                                                 </button>
                                             </div>
 
-                                            <div className={`grid ${GRID_CLASS} justify-center gap-4 pb-2 transition-all duration-300`}>
+                                            {/* FIXED LAYOUT: 
+                                                Using 'flex flex-wrap' instead of 'grid'.
+                                                This ensures that if 4 images are too wide for one row,
+                                                the 4th image simply wraps to the next line and is visible,
+                                                instead of being cut off by a fixed grid column count.
+                                            */}
+                                            <div className="flex flex-wrap justify-center content-start gap-4 pb-2 transition-all duration-300">
                                                 {images.map((img) => (
                                                     <div key={img.id} className={`flex flex-col items-center group relative ${WRAPPER_WIDTH_CLASS}`}>
                                                         <button onClick={() => removeImageSlot(img.id)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 no-print transition-opacity z-20 hover:bg-red-200"><IconX /></button>
