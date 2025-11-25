@@ -85,11 +85,10 @@
             useEffect(() => {
                 const handleResize = () => {
                     if (containerRef.current) {
-                        const parentWidth = window.innerWidth - 32; // Account for padding on both sides
+                        const parentWidth = window.innerWidth - 32; // Account for padding
                         const a4WidthPx = 794; // 210mm in pixels at 96dpi
                         if (parentWidth < a4WidthPx) {
-                            const newScale = parentWidth / a4WidthPx;
-                            setScale(newScale);
+                            setScale(parentWidth / a4WidthPx);
                         } else {
                             setScale(1);
                         }
@@ -141,7 +140,7 @@
                 <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center print:bg-white print:p-0">
                     
                     {/* Controls Bar */}
-                    <div className="w-full mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-lg shadow-md no-print flex justify-between items-center sticky top-2 z-50">
+                    <div className="w-full max-w-3xl mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-lg shadow-md no-print flex justify-between items-center sticky top-2 z-50">
                         <div>
                             <h1 className="text-lg sm:text-xl font-bold text-gray-800">Job Card Generator</h1>
                             <p className="text-xs sm:text-sm text-gray-500">Fill details & Print</p>
