@@ -6,36 +6,67 @@
     <title>Job Card Maker</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-    
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
         body { font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
         .font-dm-sans { font-family: 'DM Sans', sans-serif; }
         
-        /* Print Adjustments */
+        /* --- CRITICAL PRINT FIXES --- */
         @media print {
-            @page { margin: 0; size: A4; }
-            body { 
-                -webkit-print-color-adjust: exact; 
-                background-color: white !important;
-                margin: 0;
+            @page { 
+                size: A4; 
+                margin: 0; 
             }
+            
+            body, html, #root {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                background-color: white;
+            }
+
+            /* Hide UI elements */
             .no-print { display: none !important; }
-            .print-full-width { width: 100% !important; height: 100% !important; transform: none !important; margin: 0 !important; }
-            #root { padding: 0 !important; }
+
+            /* Reset the scaling container so it fills the page */
+            .print-container {
+                transform: none !important;
+                width: 100% !important;
+                height: 100% !important;
+                position: static !important;
+                margin: 0 !important;
+                left: auto !important;
+                top: auto !important;
+                overflow: visible !important;
+            }
+
+            /* Ensure the A4 sheet is exactly A4 */
+            .a4-sheet {
+                width: 210mm !important;
+                height: 297mm !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                transform: none !important;
+            }
+            
+            /* Center content if browser adds default margins */
+            .center-print {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+            }
         }
 
         /* Clean up Date Input */
         input[type="date"]::-webkit-inner-spin-button,
         input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: grayscale(1);
-            opacity: 0.5;
+            filter: grayscale(1); opacity: 0.5;
         }
     </style>
 </head>
@@ -46,88 +77,54 @@
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
 
-        // --- Icons ---
-        const IconPrinter = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-        );
-        const IconUpload = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        );
-        const IconX = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        );
-        const IconPlus = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        );
+        const IconPrinter = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>;
+        const IconUpload = () => <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>;
+        const IconX = () => <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>;
+        const IconPlus = () => <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>;
 
-        // --- Main App Component ---
         function JobCardApp() {
             const [formData, setFormData] = useState({
-                jobCardNo: '0000',
-                designNo: 'SK-0000',
-                ref1: '---',
-                ref2: '---',
-                date: new Date().toISOString().split('T')[0],
-                party: '---',
-                fabric: '---',
-                fabricPanna: '---',
-                meters: '---',
-                programStarts: '---',
-                programEnds: '---',
-                remarks: '---',
+                jobCardNo: '0000', designNo: 'SK-0000', ref1: '---', ref2: '---',
+                date: new Date().toISOString().split('T')[0], party: '---', fabric: '---',
+                fabricPanna: '---', meters: '---', programStarts: '---', programEnds: '---', remarks: '---',
             });
 
-            const [images, setImages] = useState([
-                { id: 1, src: null, bottomLabel: 'SK-000-0' }
-            ]);
-
+            const [images, setImages] = useState([{ id: 1, src: null, bottomLabel: 'SK-000-0' }]);
             const [scale, setScale] = useState(1);
             const containerRef = useRef(null);
+            
+            // Image Sizing Logic
+            const isSmallMode = images.length > 6;
+            const IMG_SIZE_CLASS = isSmallMode ? 'w-[130px] h-[130px]' : 'w-[200px] h-[200px]';
+            const WRAPPER_WIDTH_CLASS = isSmallMode ? 'w-[130px]' : 'w-[200px]';
+            const GRID_CLASS = isSmallMode ? 'grid-cols-[repeat(auto-fit,130px)]' : 'grid-cols-[repeat(auto-fit,200px)]';
 
-            // A4 Dimensions in Pixels (approx at 96 DPI)
             const A4_WIDTH_PX = 794;
             const A4_HEIGHT_PX = 1123;
 
             useEffect(() => {
                 const handleResize = () => {
                     if (containerRef.current) {
-                        // Get available width of the screen/parent
                         const parentWidth = window.innerWidth;
-                        const padding = parentWidth < 600 ? 16 : 32; // Mobile vs Desktop padding
-                        const availableWidth = parentWidth - padding;
-
-                        // Calculate scale
-                        let newScale = availableWidth / A4_WIDTH_PX;
-                        if (newScale > 1) newScale = 1; // Don't scale up on huge screens
-                        
+                        const padding = parentWidth < 600 ? 16 : 32;
+                        let newScale = (parentWidth - padding) / A4_WIDTH_PX;
+                        if (newScale > 1) newScale = 1;
                         setScale(newScale);
                     }
                 };
-                
                 window.addEventListener('resize', handleResize);
-                // Trigger immediately
                 handleResize();
-                
-                // Trigger again after a slight delay to handle mobile browser UI shifts
                 setTimeout(handleResize, 100);
-
                 return () => window.removeEventListener('resize', handleResize);
             }, []);
 
-            const handleInputChange = (e) => {
-                const { name, value } = e.target;
-                setFormData(prev => ({ ...prev, [name]: value }));
-            };
-
+            const handleInputChange = (e) => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+            
             const handleImageUpload = (e, id) => {
                 const file = e.target.files[0];
                 if (file) {
                     const reader = new FileReader();
-                    reader.onload = (event) => {
-                        setImages(prev => prev.map(img => 
-                            img.id === id ? { ...img, src: event.target.result } : img
-                        ));
-                    };
+                    reader.onload = (ev) => setImages(prev => prev.map(img => img.id === id ? { ...img, src: ev.target.result } : img));
                     reader.readAsDataURL(file);
                 }
             };
@@ -137,121 +134,74 @@
                 setImages([...images, { id: newId, src: null, bottomLabel: 'Code' }]);
             };
 
-            const removeImageSlot = (id) => {
-                setImages(images.filter(img => img.id !== id));
-            };
-
-            const updateImageLabel = (id, field, value) => {
-                setImages(prev => prev.map(img => 
-                    img.id === id ? { ...img, [field]: value } : img
-                ));
-            };
-
-            const handlePrint = () => {
-                window.print();
-            };
+            const removeImageSlot = (id) => setImages(images.filter(img => img.id !== id));
+            
+            const updateImageLabel = (id, val) => setImages(prev => prev.map(img => img.id === id ? { ...img, bottomLabel: val } : img));
+            
+            const handlePrint = () => window.print();
 
             return (
-                <div className="min-h-screen bg-gray-100 flex flex-col items-center print:bg-white print:block">
-                    
-                    {/* Controls Bar - Fixed at top */}
+                <div className="min-h-screen bg-gray-100 flex flex-col items-center center-print">
+                    {/* Header */}
                     <div className="w-full max-w-3xl bg-white p-3 border-b shadow-sm no-print sticky top-0 z-50 flex justify-between items-center mb-4">
                         <div>
-                            <h1 className="text-lg font-bold text-gray-800 leading-tight">Job Card Maker</h1>
+                            <h1 className="text-lg font-bold text-gray-800">Job Card Maker</h1>
                             <p className="text-xs text-gray-500">Auto-scales to device</p>
                         </div>
-                        <button 
-                            onClick={handlePrint}
-                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                        >
-                            <IconPrinter />
-                            <span>Print</span>
+                        <button onClick={handlePrint} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                            <IconPrinter /> <span>Print</span>
                         </button>
                     </div>
 
-                    {/* Scale Wrapper Container */}
-                    <div 
-                        ref={containerRef}
-                        className="w-full flex justify-center overflow-hidden pb-10 print:pb-0 print:block"
-                    >
-                        {/* Dynamic Height Box:
-                           The height matches the scaled content so the footer flows correctly.
-                           In print mode, we ignore this and let it flow naturally.
-                        */}
+                    {/* Scale Container */}
+                    <div ref={containerRef} className="w-full flex justify-center overflow-hidden pb-10 print:pb-0 print:block print:w-full print:h-full">
+                        
+                        {/* Wrapper for Height Calculation */}
                         <div 
-                            className="relative print:w-full print:h-auto"
+                            className="relative print-container" 
                             style={{ 
                                 width: '100%', 
-                                height: window.matchMedia('print').matches ? 'auto' : `${A4_HEIGHT_PX * scale}px` 
+                                height: `${A4_HEIGHT_PX * scale}px` // This height is ignored in print thanks to CSS overrides
                             }}
                         >
-                            {/* Transformation Box:
-                                This applies the CSS scale from the top-center.
-                            */}
+                            {/* Transformation Box */}
                             <div 
-                                className="origin-top absolute top-0 left-1/2 -translate-x-1/2 shadow-2xl print:shadow-none print:transform-none print:static print:translate-x-0"
+                                className="print-container origin-top absolute top-0 left-1/2 -translate-x-1/2 shadow-2xl"
                                 style={{ 
-                                    transform: `translate(-50%, 0) scale(${scale})`, // Centering + Scaling
-                                    width: `${A4_WIDTH_PX}px`,
-                                    height: `${A4_HEIGHT_PX}px`,
+                                    transform: `translate(-50%, 0) scale(${scale})`, 
+                                    width: `${A4_WIDTH_PX}px`, 
+                                    height: `${A4_HEIGHT_PX}px` 
                                 }}
                             >
-                                {/* Actual A4 Sheet */}
-                                <div 
-                                    className="bg-white text-gray-800 relative mx-auto print:w-full print:h-full"
-                                    style={{ 
-                                        width: '210mm', 
-                                        height: '297mm',
-                                        padding: '10mm'
-                                    }}
-                                >
-                                    {/* Main Border Box */}
+                                
+                                {/* A4 Sheet - The Actual Card */}
+                                <div className="a4-sheet bg-white text-gray-800 relative mx-auto" style={{ width: '210mm', height: '297mm', padding: '10mm' }}>
                                     <div className="border-2 border-black h-full flex flex-col">
                                         
-                                        {/* Image Section */}
+                                        {/* Images Area */}
                                         <div className="border-b-2 border-black p-4 relative flex flex-col flex-shrink-0" style={{ minHeight: 'fit-content' }}>
                                             <div className="absolute top-2 right-2 no-print z-10">
-                                                <button 
-                                                    onClick={addImageSlot}
-                                                    className="bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 border border-green-300 flex items-center gap-1 text-xs font-bold"
-                                                >
+                                                <button onClick={addImageSlot} className="bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 border border-green-300 flex items-center gap-1 text-xs font-bold">
                                                     <IconPlus /> Add Slot
                                                 </button>
                                             </div>
 
-                                            <div className={`grid ${images.length <= 6 ? 'grid-cols-[repeat(auto-fit,200px)]' : 'grid-cols-[repeat(auto-fit,140px)]'} justify-center gap-4 pb-2`}>
+                                            <div className={`grid ${GRID_CLASS} justify-center gap-4 pb-2 transition-all duration-300`}>
                                                 {images.map((img) => (
-                                                    <div key={img.id} className={`flex flex-col items-center group relative ${images.length <= 6 ? 'w-[200px]' : 'w-[140px]'}`}>
-                                                        <button 
-                                                            onClick={() => removeImageSlot(img.id)}
-                                                            className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 no-print transition-opacity z-20 hover:bg-red-200"
-                                                        >
-                                                            <IconX />
-                                                        </button>
-
-                                                        <div className={`${images.length <= 6 ? 'w-[200px] h-[200px]' : 'w-[140px] h-[140px]'} bg-gray-50 flex items-center justify-center relative border border-transparent hover:border-gray-300 transition-colors`}>
-                                                            {img.src ? (
-                                                                <img src={img.src} alt="Design" className="w-full h-full object-contain" />
-                                                            ) : (
-                                                                <div className={`text-gray-400 text-xs text-center p-2 border-2 border-dashed border-gray-300 rounded w-[90%] h-[90%] flex flex-col justify-center items-center ${images.length > 6 ? 'text-[10px]' : ''}`}>
-                                                                    <IconUpload />
-                                                                    <span className="no-print text-sm mt-1">Upload</span>
+                                                    <div key={img.id} className={`flex flex-col items-center group relative ${WRAPPER_WIDTH_CLASS}`}>
+                                                        <button onClick={() => removeImageSlot(img.id)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 no-print transition-opacity z-20 hover:bg-red-200"><IconX /></button>
+                                                        
+                                                        <div className={`${IMG_SIZE_CLASS} bg-gray-50 flex items-center justify-center relative border border-transparent hover:border-gray-300 transition-all duration-300`}>
+                                                            {img.src ? <img src={img.src} alt="Design" className="w-full h-full object-contain" /> : 
+                                                                <div className={`text-gray-400 text-xs text-center p-2 border-2 border-dashed border-gray-300 rounded w-[90%] h-[90%] flex flex-col justify-center items-center ${isSmallMode ? 'scale-90' : ''}`}>
+                                                                    <IconUpload /><span className="no-print text-sm mt-1">Upload</span>
                                                                 </div>
-                                                            )}
-                                                            <input 
-                                                                type="file" 
-                                                                accept="image/*"
-                                                                onChange={(e) => handleImageUpload(e, img.id)}
-                                                                className="absolute inset-0 opacity-0 cursor-pointer no-print w-full h-full"
-                                                            />
+                                                            }
+                                                            <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, img.id)} className="absolute inset-0 opacity-0 cursor-pointer no-print w-full h-full" />
                                                         </div>
 
-                                                        <input
-                                                            type="text"
-                                                            value={img.bottomLabel}
-                                                            onChange={(e) => updateImageLabel(img.id, 'bottomLabel', e.target.value)}
-                                                            className={`text-center font-bold ${images.length <= 6 ? 'text-base' : 'text-sm'} mt-1 w-full bg-white rounded focus:bg-blue-50 border-none outline-none font-dm-sans`}
-                                                        />
+                                                        <input type="text" value={img.bottomLabel} onChange={(e) => updateImageLabel(img.id, e.target.value)} 
+                                                            className={`text-center font-bold ${isSmallMode ? 'text-sm' : 'text-base'} mt-1 w-full bg-white rounded focus:bg-blue-50 border-none outline-none font-dm-sans`} />
                                                     </div>
                                                 ))}
                                             </div>
@@ -268,12 +218,10 @@
                                             </div>
                                         </div>
 
-                                        {/* Form Data */}
+                                        {/* Form Fields */}
                                         <div className="flex-1 flex flex-col font-bold text-gray-800 text-xs uppercase min-h-0">
-                                            
-                                            {/* Rows */}
                                             {[
-                                                { label: 'JOB CARD NO', key: 'jobCardNo', h: 'h-11', extraFields: true },
+                                                { label: 'JOB CARD NO', key: 'jobCardNo', h: 'h-11', extra: true },
                                                 { label: 'DATE', key: 'date', h: 'h-11', type: 'date' },
                                                 { label: 'PARTY', key: 'party', h: 'h-11' },
                                                 { label: 'FABRIC', key: 'fabric', h: 'h-12' },
@@ -284,56 +232,30 @@
                                             ].map((row, idx) => (
                                                 <div key={idx} className={`flex border-b border-black ${row.h} divide-x divide-black flex-shrink-0`}>
                                                     <div className="w-[140px] bg-gray-200 pl-3 flex items-center text-sm">{row.label}</div>
-                                                    
-                                                    {row.extraFields ? (
+                                                    {row.extra ? (
                                                         <>
-                                                            <div className="w-[120px] flex items-center px-2">
-                                                                <input name={row.key} value={formData[row.key]} onChange={handleInputChange} className="w-full bg-transparent text-blue-900 font-bold text-lg outline-none font-dm-sans" />
-                                                            </div>
-                                                            <div className="flex-1 flex items-center justify-center bg-gray-100">
-                                                                <input name="designNo" value={formData.designNo} onChange={handleInputChange} className="w-full text-center bg-transparent outline-none font-dm-sans text-lg" />
-                                                            </div>
-                                                            <div className="w-[70px] flex items-center justify-center text-blue-600">
-                                                                <input name="ref1" value={formData.ref1} onChange={handleInputChange} className="w-full text-center bg-transparent outline-none font-dm-sans text-lg" />
-                                                            </div>
-                                                            <div className="w-[70px] flex items-center justify-center text-blue-600 bg-gray-100">
-                                                                <input name="ref2" value={formData.ref2} onChange={handleInputChange} className="w-full text-center bg-transparent outline-none font-dm-sans text-lg" />
-                                                            </div>
+                                                            <div className="w-[120px] px-2 flex items-center"><input name={row.key} value={formData[row.key]} onChange={handleInputChange} className="w-full bg-transparent text-blue-900 font-bold text-lg outline-none font-dm-sans" /></div>
+                                                            <div className="flex-1 flex items-center justify-center bg-gray-100"><input name="designNo" value={formData.designNo} onChange={handleInputChange} className="w-full text-center bg-transparent outline-none font-dm-sans text-lg" /></div>
+                                                            <div className="w-[70px] flex items-center justify-center text-blue-600"><input name="ref1" value={formData.ref1} onChange={handleInputChange} className="w-full text-center bg-transparent outline-none font-dm-sans text-lg" /></div>
+                                                            <div className="w-[70px] flex items-center justify-center text-blue-600 bg-gray-100"><input name="ref2" value={formData.ref2} onChange={handleInputChange} className="w-full text-center bg-transparent outline-none font-dm-sans text-lg" /></div>
                                                         </>
                                                     ) : (
                                                         <div className={`flex-1 flex items-center ${row.label === 'DATE' ? 'justify-center' : 'pl-3'} bg-white`}>
-                                                            <input 
-                                                                type={row.type || 'text'} 
-                                                                name={row.key} 
-                                                                value={formData[row.key]} 
-                                                                onChange={handleInputChange} 
-                                                                className={`bg-transparent outline-none text-blue-900 font-bold text-lg w-full ${row.label === 'DATE' ? 'text-center' : ''} font-dm-sans`} 
-                                                            />
+                                                            <input type={row.type || 'text'} name={row.key} value={formData[row.key]} onChange={handleInputChange} className={`bg-transparent outline-none text-blue-900 font-bold text-lg w-full ${row.label === 'DATE' ? 'text-center' : ''} font-dm-sans`} />
                                                         </div>
                                                     )}
                                                 </div>
                                             ))}
-
-                                            {/* Remarks Section */}
+                                            {/* Remarks */}
                                             <div className="flex flex-1 divide-x divide-black min-h-0 overflow-hidden">
                                                 <div className="w-[140px] bg-gray-200 pl-3 pt-4 flex-shrink-0 border-r border-black text-sm">REMARKS IF ANY</div>
                                                 <div className="flex-1 p-3 relative bg-white h-full">
-                                                    <textarea 
-                                                        name="remarks" 
-                                                        value={formData.remarks} 
-                                                        onChange={handleInputChange} 
-                                                        className="w-full h-full bg-transparent outline-none resize-none text-blue-900 font-bold text-xl text-center leading-relaxed font-dm-sans"
-                                                    ></textarea>
-                                                    <div className="absolute bottom-2 right-6 flex flex-col items-center pointer-events-none">
-                                                        <span className="text-blue-500 text-xs font-dm-sans">-Sign</span>
-                                                    </div>
+                                                    <textarea name="remarks" value={formData.remarks} onChange={handleInputChange} className="w-full h-full bg-transparent outline-none resize-none text-blue-900 font-bold text-xl text-center leading-relaxed font-dm-sans"></textarea>
+                                                    <div className="absolute bottom-2 right-6 flex flex-col items-center pointer-events-none"><span className="text-blue-500 text-xs font-dm-sans">-Sign</span></div>
                                                 </div>
                                             </div>
-
                                         </div>
                                     </div>
-                                    
-                                    {/* Decorative Dot */}
                                     <div className="absolute top-[35%] left-2 w-4 h-4 bg-gray-800 rounded-full no-print shadow-inner"></div>
                                 </div>
                             </div>
