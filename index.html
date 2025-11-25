@@ -62,20 +62,19 @@
             const [formData, setFormData] = useState({
                 jobCardNo: '0000',
                 designNo: 'SK-0000',
-                ref1: '---',
-                ref2: '---',
+                ref1: '',
+                ref2: '',
                 date: new Date().toISOString().split('T')[0],
-                party: '---',
-                fabric: '---',
-                fabricPanna: '---',
-                meters: '---',
-                programStarts: '---',
-                programEnds: '---',
-                remarks: '---',
+                party: '',
+                fabric: '',
+                fabricPanna: '',
+                meters: '',
+                programStarts: '',
+                programEnds: '',
+                remarks: '',
             });
 
             const [images, setImages] = useState([
-                { id: 1, src: null, bottomLabel: 'SK-000-0' }
             ]);
 
             const [scale, setScale] = useState(1);
@@ -84,10 +83,10 @@
             useEffect(() => {
                 const handleResize = () => {
                     if (containerRef.current) {
-                        const parentWidth = window.innerWidth - 16; // Reduced padding for mobile
-                        const a4Width = 794; 
-                        if (parentWidth < a4Width) {
-                            setScale(parentWidth / a4Width);
+                        const parentWidth = window.innerWidth - 32; // Account for padding
+                        const a4WidthPx = 794; // 210mm in pixels at 96dpi
+                        if (parentWidth < a4WidthPx) {
+                            setScale(parentWidth / a4WidthPx);
                         } else {
                             setScale(1);
                         }
@@ -136,7 +135,7 @@
             };
 
             return (
-                <div className="min-h-screen bg-gray-100 p-2 sm:p-4 flex flex-col items-center print:bg-white print:p-0">
+                <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center print:bg-white print:p-0">
                     
                     {/* Controls Bar */}
                     <div className="w-full max-w-3xl mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-lg shadow-md no-print flex justify-between items-center sticky top-2 z-50">
@@ -157,10 +156,10 @@
                     {/* Scale Wrapper */}
                     <div 
                         ref={containerRef}
-                        className="print:w-full print:h-full print:absolute print:top-0 print:left-0 print:transform-none origin-top-left transition-transform duration-200"
+                        className="print:w-full print:h-full print:absolute print:top-0 print:left-0 print:transform-none origin-top transition-transform duration-200 w-full flex justify-center"
                         style={{ 
                             transform: `scale(${scale})`,
-                            marginBottom: `-${(1 - scale) * 1123}px`
+                            marginBottom: scale < 1 ? `-${(1 - scale) * 1123}px` : '0'
                         }}
                     >
                         {/* A4 Sheet */}
