@@ -62,21 +62,20 @@
             const [formData, setFormData] = useState({
                 jobCardNo: '0000',
                 designNo: 'SK-0000',
-                ref1: 'PP',
-                ref2: 'M-1',
+                ref1: '---',
+                ref2: '---',
                 date: new Date().toISOString().split('T')[0],
                 party: '---',
-                fabric: 'Cotton',
-                fabricPanna: 'Tulyan 60"',
-                meters: '60m',
-                programStarts: '',
-                programEnds: '',
-                remarks: '8 head',
+                fabric: '---',
+                fabricPanna: '---',
+                meters: '---',
+                programStarts: '---',
+                programEnds: '---',
+                remarks: '---',
             });
 
             const [images, setImages] = useState([
-                { id: 1, src: null, bottomLabel: 'SK-198-1' },
-                { id: 2, src: null, bottomLabel: 'SK-198-2' }
+                { id: 1, src: null, bottomLabel: 'SK-000-0' }
             ]);
 
             const [scale, setScale] = useState(1);
@@ -85,7 +84,7 @@
             useEffect(() => {
                 const handleResize = () => {
                     if (containerRef.current) {
-                        const parentWidth = window.innerWidth - 32; 
+                        const parentWidth = window.innerWidth - 16; // Reduced padding for mobile
                         const a4Width = 794; 
                         if (parentWidth < a4Width) {
                             setScale(parentWidth / a4Width);
@@ -137,20 +136,21 @@
             };
 
             return (
-                <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center print:bg-white print:p-0">
+                <div className="min-h-screen bg-gray-100 p-2 sm:p-4 flex flex-col items-center print:bg-white print:p-0">
                     
                     {/* Controls Bar */}
-                    <div className="w-full max-w-3xl mb-6 bg-white p-4 rounded-lg shadow-md no-print flex justify-between items-center sticky top-2 z-50">
+                    <div className="w-full max-w-3xl mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-lg shadow-md no-print flex justify-between items-center sticky top-2 z-50">
                         <div>
-                            <h1 className="text-xl font-bold text-gray-800">Job Card Generator</h1>
-                            <p className="text-sm text-gray-500">Fill details & Print</p>
+                            <h1 className="text-lg sm:text-xl font-bold text-gray-800">Job Card Generator</h1>
+                            <p className="text-xs sm:text-sm text-gray-500">Fill details & Print</p>
                         </div>
                         <button 
                             onClick={handlePrint}
-                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
+                            className="flex items-center gap-1 sm:gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded transition-colors text-sm"
                         >
                             <IconPrinter />
                             <span className="hidden sm:inline">Print / Save PDF</span>
+                            <span className="inline sm:hidden">Print</span>
                         </button>
                     </div>
 
@@ -176,19 +176,19 @@
                             <div className="border-2 border-black h-full flex flex-col">
                                 
                                 {/* Image Section */}
-<div className="border-b-2 border-black p-4 relative flex flex-col flex-shrink-0" style={{ minHeight: 'fit-content' }}>
-    <div className="absolute top-2 right-2 no-print z-10">
-        <button 
-            onClick={addImageSlot}
-            className="bg-green-100 text-green-700 p-1 rounded hover:bg-green-200 border border-green-300 flex items-center gap-1 text-xs"
-        >
-            <IconPlus /> Add Slot
-        </button>
-    </div>
+                                <div className="border-b-2 border-black p-4 relative flex flex-col flex-shrink-0" style={{ minHeight: 'fit-content' }}>
+                                    <div className="absolute top-2 right-2 no-print z-10">
+                                        <button 
+                                            onClick={addImageSlot}
+                                            className="bg-green-100 text-green-700 p-1 rounded hover:bg-green-200 border border-green-300 flex items-center gap-1 text-xs"
+                                        >
+                                            <IconPlus /> Add Slot
+                                        </button>
+                                    </div>
 
-    <div className="grid grid-cols-[repeat(auto-fit,200px)] justify-center gap-4 pb-2">
-        {images.map((img) => (
-            <div key={img.id} className="flex flex-col items-center group relative w-[200px]">
+                                    <div className={`grid ${images.length <= 6 ? 'grid-cols-[repeat(auto-fit,200px)]' : 'grid-cols-[repeat(auto-fit,140px)]'} justify-center gap-4 pb-2`}>
+                                        {images.map((img) => (
+                                            <div key={img.id} className={`flex flex-col items-center group relative ${images.length <= 6 ? 'w-[200px]' : 'w-[140px]'}`}>
                                                 <button 
                                                     onClick={() => removeImageSlot(img.id)}
                                                     className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 no-print transition-opacity z-20"
@@ -196,11 +196,11 @@
                                                     <IconX />
                                                 </button>
 
-                                                <div className="w-[200px] h-[200px] bg-gray-50 flex items-center justify-center relative border border-transparent hover:border-gray-300 transition-colors">
+                                                <div className={`${images.length <= 6 ? 'w-[200px] h-[200px]' : 'w-[140px] h-[140px]'} bg-gray-50 flex items-center justify-center relative border border-transparent hover:border-gray-300 transition-colors`}>
                                                     {img.src ? (
                                                         <img src={img.src} alt="Design" className="w-full h-full object-contain" />
                                                     ) : (
-                                                        <div className="text-gray-400 text-xs text-center p-2 border-2 border-dashed border-gray-300 rounded w-[90%] h-[90%] flex flex-col justify-center items-center">
+                                                        <div className={`text-gray-400 text-xs text-center p-2 border-2 border-dashed border-gray-300 rounded w-[90%] h-[90%] flex flex-col justify-center items-center ${images.length > 6 ? 'text-[10px]' : ''}`}>
                                                             <IconUpload />
                                                             <span className="no-print text-sm mt-1">Upload Image</span>
                                                         </div>
@@ -217,7 +217,7 @@
                                                     type="text"
                                                     value={img.bottomLabel}
                                                     onChange={(e) => updateImageLabel(img.id, 'bottomLabel', e.target.value)}
-                                                    className="text-center font-bold text-base mt-1 w-full bg-white rounded focus:bg-blue-50 border-none outline-none font-dm-sans"
+                                                    className={`text-center font-bold ${images.length <= 6 ? 'text-base' : 'text-sm'} mt-1 w-full bg-white rounded focus:bg-blue-50 border-none outline-none font-dm-sans`}
                                                 />
                                             </div>
                                         ))}
